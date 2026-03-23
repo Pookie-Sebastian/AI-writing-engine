@@ -85,6 +85,11 @@ const SEVERITY_STYLES: Record<string, string> = {
 };
 
 function AnalysisCard({ result }: { result: AnalysisResult }) {
+  // Defensive defaults — analysis engine may omit optional array fields
+  const strengths = result.strengths ?? [];
+  const issues    = result.issues    ?? [];
+  const wordCount = result.wordCount ?? 0;
+
   const scoreColor =
     result.overallScore >= 75 ? 'text-green-600' :
     result.overallScore >= 50 ? 'text-yellow-600' :
@@ -102,11 +107,11 @@ function AnalysisCard({ result }: { result: AnalysisResult }) {
 
       <div className="p-4 space-y-3">
         {/* Strengths */}
-        {result.strengths.length > 0 && (
+        {strengths.length > 0 && (
           <div>
             <p className="text-xs font-semibold text-slate-500 mb-1.5">Strengths</p>
             <ul className="space-y-1">
-              {result.strengths.map((s, i) => (
+              {strengths.map((s, i) => (
                 <li key={i} className="flex gap-2 text-xs text-slate-700">
                   <span className="text-green-500 shrink-0">✓</span>
                   <span>{s}</span>
@@ -117,11 +122,11 @@ function AnalysisCard({ result }: { result: AnalysisResult }) {
         )}
 
         {/* Issues */}
-        {result.issues.length > 0 && (
+        {issues.length > 0 && (
           <div>
             <p className="text-xs font-semibold text-slate-500 mb-1.5">Issues to fix</p>
             <ul className="space-y-2">
-              {result.issues.map((issue: EssayIssue) => (
+              {issues.map((issue: EssayIssue) => (
                 <li key={issue.id} className={`rounded-lg border px-3 py-2 text-xs ${SEVERITY_STYLES[issue.severity] ?? 'bg-slate-100 text-slate-700 border-slate-200'}`}>
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <span className="font-semibold capitalize">{issue.severity}</span>
@@ -139,7 +144,7 @@ function AnalysisCard({ result }: { result: AnalysisResult }) {
         )}
 
         <p className="text-xs text-slate-400">
-          {result.wordCount.toLocaleString()} words · Ask me to fix any of these issues
+          {wordCount > 0 ? `${wordCount.toLocaleString()} words · ` : ''}Ask me to fix any of these issues
         </p>
       </div>
     </div>

@@ -178,7 +178,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       ],
     });
 
-    const content = completion.choices[0]?.message?.content ?? '';
+    const content = completion.choices[0]?.message?.content;
+    if (!content) {
+      logger.warn('Model returned empty content', { requestId });
+      return NextResponse.json(
+        { error: 'The model returned an empty response. Please try again.' },
+        { status: 502, headers: { 'X-Request-ID': requestId } }
+      );
+    }
+
     logger.info('Chat complete', { requestId, userId, chars: content.length });
 
     return NextResponse.json(

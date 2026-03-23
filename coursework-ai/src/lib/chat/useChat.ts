@@ -116,9 +116,10 @@ export function useChat(): UseChatReturn {
 
       const json = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
 
-      const replyContent = (!res.ok || json.error)
-        ? `Sorry, something went wrong: ${json.error ?? res.status}`
-        : (json.content ?? '');
+      // Surface any error — including empty content — as a visible message.
+      const replyContent = (!res.ok || json.error || !json.content)
+        ? (json.error ?? `Request failed (${res.status}). Please try again.`)
+        : (json.content as string);
 
       setMessages(prev =>
         prev.map(m =>
