@@ -156,9 +156,10 @@ function FormattedContent({ content, isUser }: { content: string; isUser: boolea
   function inline(text: string): string {
     return text
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/`([^`]+)`/g, `<code class="${codeClass}">$1</code>`);
+      // Use [^*\n]+ to prevent bold/italic matching across line boundaries
+      .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
+      .replace(/`([^`\n]+)`/g, `<code class="${codeClass}">$1</code>`);
   }
 
   const blocks = content.split(/\n{2,}/);

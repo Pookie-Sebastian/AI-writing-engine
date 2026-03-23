@@ -68,8 +68,8 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
             aria-label="Send message"
             className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors mb-0.5
               ${disabled
-                // Loading state: indigo background, spinner, not interactive
-                ? 'bg-indigo-500 text-white cursor-default'
+                // Loading: show spinner, block all interaction
+                ? 'bg-indigo-500 text-white cursor-default pointer-events-none'
                 : canSend
                   // Ready to send
                   ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer'

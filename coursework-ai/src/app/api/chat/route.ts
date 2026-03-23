@@ -158,13 +158,23 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // 5. Call OpenAI
   try {
     const openai     = getOpenAI();
+    // Truncate individual messages that are unusually long (e.g. injected analysis
+    // summaries) to keep the total prompt within the model's context window.
+    const MAX_MSG_CHARS = 8000;
+    const safeMessages = messages.map(m => ({
+      role:    m.role,
+      content: m.content.length > MAX_MSG_CHARS
+        ? m.content.slice(0, MAX_MSG_CHARS) + '\n[truncated]'
+        : m.content,
+    }));
+
     const completion = await openai.chat.completions.create({
       model:       MODEL_ID,
       temperature: TEMPERATURE,
       max_tokens:  MAX_TOKENS,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        ...messages.map(m => ({ role: m.role, content: m.content })),
+        ...safeMessages,
       ],
     });
 

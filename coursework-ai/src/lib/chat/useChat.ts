@@ -149,22 +149,23 @@ export function useChat(): UseChatReturn {
     // Build a plain-text summary for the chat history so the AI can reference
     // it in follow-up responses. The full AnalysisResult is attached separately
     // for the UI to render a rich card.
+    // Content is capped at 4000 chars so it never exceeds the API's per-message
+    // max (20 000 chars) even when combined with a long summary.
     const issueLines = result.issues
       .slice(0, 5)
       .map(i => `- [${i.severity}] ${i.description}`)
       .join('\n');
 
-    const content = [
+    const parts = [
       `**Essay Analysis Complete** — Score: ${result.overallScore}/100`,
-      '',
       result.summary,
-      '',
       result.issues.length > 0 ? `**Top issues:**\n${issueLines}` : 'No major issues found.',
-      '',
-      result.strengths.length > 0
-        ? `**Strengths:** ${result.strengths.join(', ')}`
-        : '',
-    ].filter(l => l !== undefined).join('\n').trim();
+      result.strengths.length > 0 ? `**Strengths:** ${result.strengths.join(', ')}` : '',
+    ].filter(Boolean); // removes empty strings, not just undefined
+
+    const full = parts.join('\n\n').trim();
+    // Truncate to 4000 chars to stay well within the API message size limit
+    const content = full.length > 4000 ? full.slice(0, 4000) + '\n\n[truncated]' : full;
 
     const msg: ChatMessage = {
       id:             makeId(),
