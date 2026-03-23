@@ -35,13 +35,19 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
     }
   }
 
-  const canSend = value.trim().length > 0 && !disabled;
+  // hasText: whether there is something to send
+  // canSend: whether clicking send / pressing Enter should do anything
+  const hasText = value.trim().length > 0;
+  const canSend = hasText && !disabled;
 
   return (
     <div className="border-t border-slate-200 bg-white px-4 py-3">
       <div className="max-w-3xl mx-auto">
         <div className={`flex items-end gap-2 rounded-2xl border px-4 py-2 transition-colors
-          ${disabled ? 'border-slate-200 bg-slate-50' : 'border-slate-300 bg-white focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'}`}>
+          ${disabled
+            ? 'border-slate-200 bg-slate-50'
+            : 'border-slate-300 bg-white focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
+          }`}>
           <textarea
             ref={textareaRef}
             value={value}
@@ -54,12 +60,21 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
           />
           <button
             onClick={submit}
-            disabled={!canSend}
+            // Only block clicks when there is no text to send.
+            // While loading, the button shows a spinner and is not clickable
+            // via submit() (which guards on !disabled), but we keep it visually
+            // active so the user can see the request is in flight.
+            disabled={!hasText}
             aria-label="Send message"
             className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors mb-0.5
-              ${canSend
-                ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                : 'bg-slate-100 text-slate-300 cursor-not-allowed'
+              ${disabled
+                // Loading state: indigo background, spinner, not interactive
+                ? 'bg-indigo-500 text-white cursor-default'
+                : canSend
+                  // Ready to send
+                  ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer'
+                  // No text yet
+                  : 'bg-slate-100 text-slate-300 cursor-not-allowed'
               }`}
           >
             {disabled ? (

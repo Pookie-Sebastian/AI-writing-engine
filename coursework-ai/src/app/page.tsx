@@ -42,7 +42,7 @@ export default function EssayChatPage() {
 
       {/* Chat area */}
       <div className="flex-1 flex flex-col overflow-hidden max-w-3xl w-full mx-auto">
-        <ChatWindow messages={messages} onSend={sendMessage} />
+        <ChatWindow messages={messages} onSend={sendMessage} loading={loading} />
         <ChatInput onSend={sendMessage} disabled={loading} />
       </div>
 

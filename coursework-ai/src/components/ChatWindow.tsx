@@ -7,9 +7,10 @@ import type { AnalysisResult, EssayIssue } from '@/lib/ai/types';
 interface ChatWindowProps {
   messages: ChatMessage[];
   onSend: (text: string) => void;
+  loading?: boolean;
 }
 
-export default function ChatWindow({ messages, onSend }: ChatWindowProps) {
+export default function ChatWindow({ messages, onSend, loading = false }: ChatWindowProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,7 +29,7 @@ export default function ChatWindow({ messages, onSend }: ChatWindowProps) {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-lg">
           {SUGGESTIONS.map((s) => (
-            <SuggestionChip key={s.label} {...s} onSend={onSend} />
+            <SuggestionChip key={s.label} {...s} onSend={onSend} disabled={loading} />
           ))}
         </div>
       </div>
@@ -263,17 +264,24 @@ function SuggestionChip({
   label,
   prompt,
   onSend,
+  disabled = false,
 }: {
   label: string;
   prompt: string;
   onSend: (text: string) => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       onClick={() => onSend(prompt)}
-      className="text-left px-4 py-3 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50 transition-colors text-sm text-slate-700 shadow-sm"
+      disabled={disabled}
+      className={`text-left px-4 py-3 rounded-xl border transition-colors text-sm shadow-sm
+        ${disabled
+          ? 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed'
+          : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50 text-slate-700 cursor-pointer'
+        }`}
     >
-      <span className="font-medium text-slate-800 block mb-0.5">{label}</span>
+      <span className={`font-medium block mb-0.5 ${disabled ? 'text-slate-400' : 'text-slate-800'}`}>{label}</span>
       <span className="text-xs text-slate-400 line-clamp-1">{prompt.slice(0, 55)}…</span>
     </button>
   );
