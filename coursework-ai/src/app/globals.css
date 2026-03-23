@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-serif: Georgia, "Times New Roman", serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+/* Thin scrollbar for sidebars */
+aside {
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 transparent;
+}

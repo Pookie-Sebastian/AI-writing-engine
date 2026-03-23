@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 110">
+
+  <!-- ══════════════════════════════════════════
+       BLUE OUTER FRAME STROKES
+  ══════════════════════════════════════════ -->
+  <path d="M51 18 Q32 6 14 18"
+        stroke="#2563EB" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M59 18 Q78 6 96 18"
+        stroke="#2563EB" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <line x1="14" y1="18" x2="14" y2="88"
+        stroke="#2563EB" stroke-width="4" stroke-linecap="round"/>
+  <line x1="96" y1="18" x2="96" y2="88"
+        stroke="#2563EB" stroke-width="4" stroke-linecap="round"/>
+  <path d="M14 88 Q32 100 51 92"
+        stroke="#2563EB" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M96 88 Q78 100 59 92"
+        stroke="#2563EB" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+  <!-- ══════════════════════════════════════════
+       LEFT PAGE FILL — blue #2563EB
+       Outer edge follows the blue strokes (inset 2px)
+       Inner edge: concave curve away from spine
+  ══════════════════════════════════════════ -->
+  <path d="M50 21 Q32 10 16 21 L16 86 Q33 97 50 90 Q41 68 41 54 Q41 36 50 21 Z"
+        fill="#2563EB"/>
+
+  <!-- ══════════════════════════════════════════
+       RIGHT PAGE FILL — dark navy #1e2235
+  ══════════════════════════════════════════ -->
+  <path d="M60 21 Q78 10 94 21 L94 86 Q77 97 60 90 Q69 68 69 54 Q69 36 60 21 Z"
+        fill="#1e2235"/>
+
+  <!-- ══════════════════════════════════════════
+       WHITE SPINE GAP
+  ══════════════════════════════════════════ -->
+  <path d="M50 21 Q41 54 50 90 L60 90 Q69 54 60 21 Z" fill="white"/>
+
+  <!-- ══════════════════════════════════════════
+       LEFT PAGE — PEN NIB (white)
+       Centered at x=32
+  ══════════════════════════════════════════ -->
+  <path d="M25 40 Q25 26 32 26 Q39 26 39 40 L35 62 L32 67 L29 62 Z" fill="white"/>
+  <line x1="32" y1="38" x2="32" y2="67" stroke="#2563EB" stroke-width="1.2" opacity="0.45"/>
+  <line x1="32" y1="67" x2="32" y2="78" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="32" cy="83" r="4" fill="white"/>
+
+  <!-- ══════════════════════════════════════════
+       RIGHT PAGE — NEURAL NETWORK (#4DA3FF)
+       Hub at (77, 52)
+  ══════════════════════════════════════════ -->
+  <line x1="77" y1="52" x2="77" y2="38"  stroke="#4DA3FF" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="77" y1="52" x2="87" y2="42"  stroke="#4DA3FF" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="77" y1="52" x2="90" y2="54"  stroke="#4DA3FF" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="77" y1="52" x2="85" y2="64"  stroke="#4DA3FF" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="77" y1="52" x2="75" y2="66"  stroke="#4DA3FF" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="77" y1="52" x2="65" y2="62"  stroke="#4DA3FF" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="77" y1="52" x2="64" y2="50"  stroke="#4DA3FF" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="77" y1="52" x2="68" y2="40"  stroke="#4DA3FF" stroke-width="1.8" stroke-linecap="round"/>
+  <circle cx="77" cy="52" r="5.5" fill="#4DA3FF"/>
+  <circle cx="77" cy="38" r="3"   fill="#4DA3FF"/>
+  <circle cx="87" cy="42" r="3"   fill="#4DA3FF"/>
+  <circle cx="90" cy="54" r="3"   fill="#4DA3FF"/>
+  <circle cx="85" cy="64" r="3"   fill="#4DA3FF"/>
+  <circle cx="75" cy="66" r="3"   fill="#4DA3FF"/>
+  <circle cx="65" cy="62" r="3"   fill="#4DA3FF"/>
+  <circle cx="64" cy="50" r="3"   fill="#4DA3FF"/>
+  <circle cx="68" cy="40" r="3"   fill="#4DA3FF"/>
+
+  <!-- ══════════════════════════════════════════
+       WORDMARK
+  ══════════════════════════════════════════ -->
+  <text x="114" y="70"
+    font-family="'Inter','Helvetica Neue',Arial,sans-serif"
+    font-size="42" font-weight="700" letter-spacing="-1"
+  ><tspan fill="#2D3748">coursework</tspan><tspan fill="#2563EB">.ai</tspan></text>
+
+</svg>
