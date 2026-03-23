@@ -28,8 +28,9 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
-    // Send on Enter, new line on Shift+Enter
     if (e.key === 'Enter' && !e.shiftKey) {
+      // Always prevent the default newline insertion on plain Enter.
+      // submit() will no-op if disabled or empty.
       e.preventDefault();
       submit();
     }
@@ -51,12 +52,15 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
           <textarea
             ref={textareaRef}
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={(e) => !disabled && setValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            disabled={disabled}
+            // Never set disabled — disabled elements suppress keyboard events entirely,
+            // which breaks Enter-to-send. Use readOnly + visual styling instead.
+            readOnly={disabled}
             placeholder={disabled ? 'Waiting for response…' : 'Ask me to write, plan, or improve your essay…'}
             rows={1}
-            className="flex-1 resize-none bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none leading-relaxed py-1 disabled:cursor-not-allowed"
+            className={`flex-1 resize-none bg-transparent text-sm placeholder:text-slate-400 focus:outline-none leading-relaxed py-1
+              ${disabled ? 'text-slate-400 cursor-default select-none' : 'text-slate-800'}`}
           />
           <button
             onClick={submit}
