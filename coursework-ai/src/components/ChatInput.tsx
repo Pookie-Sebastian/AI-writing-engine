@@ -48,7 +48,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={disabled}
-            placeholder={disabled ? 'Waiting for response…' : 'Message Coursework AI…'}
+            placeholder={disabled ? 'Waiting for response…' : 'Ask me to write, plan, or improve your essay…'}
             rows={1}
             className="flex-1 resize-none bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none leading-relaxed py-1 disabled:cursor-not-allowed"
           />

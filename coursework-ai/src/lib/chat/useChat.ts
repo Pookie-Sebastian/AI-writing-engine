@@ -8,18 +8,20 @@
  *
  *   const { messages, loading, sendMessage, clearMessages } = useChat();
  *
- * No other imports needed. The hook handles:
- *   - Message list state
- *   - Typing-indicator placeholder while waiting for the API
- *   - POST to /api/chat with the full conversation history
- *   - Error messages surfaced as assistant bubbles (never silent failures)
- *   - Stale-closure prevention via messagesRef
+ * Analysis engine integration:
+ *   - injectAnalysis(result) — pushes a structured AnalysisResult into the
+ *     conversation as an assistant message with a rich card. The chat AI then
+ *     has the analysis summary in its history and can answer follow-up questions.
+ *   - injectMessage(content, role?) — pushes any plain message into the
+ *     conversation without an API call. Used by the analysis engine to surface
+ *     status updates (e.g. "Analysing your essay…").
  *
  * @module lib/chat/useChat
  */
 
 import { useState, useRef } from 'react';
 import type { ChatMessage } from './types';
+import type { AnalysisResult } from '@/lib/ai/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -32,6 +34,24 @@ export interface UseChatReturn {
   sendMessage: (text: string) => Promise<void>;
   /** Reset the conversation to an empty state */
   clearMessages: () => void;
+  /**
+   * Push a structured AnalysisResult into the chat as an assistant message.
+   * The analysis summary is included as the message content so the chat AI
+   * can reference it in follow-up responses.
+   * Called by the analysis engine after it finishes analysing an essay.
+   *
+   * @param result - The AnalysisResult produced by the analysis engine
+   */
+  injectAnalysis: (result: AnalysisResult) => void;
+  /**
+   * Push a plain text message into the conversation without an API call.
+   * Defaults to role 'assistant'. Used for status messages and notifications
+   * from the analysis engine.
+   *
+   * @param content - The message text
+   * @param role    - 'user' or 'assistant' (default: 'assistant')
+   */
+  injectMessage: (content: string, role?: 'user' | 'assistant') => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -125,5 +145,47 @@ export function useChat(): UseChatReturn {
     setMessages([]);
   }
 
-  return { messages, loading, sendMessage, clearMessages };
+  function injectAnalysis(result: AnalysisResult): void {
+    // Build a plain-text summary for the chat history so the AI can reference
+    // it in follow-up responses. The full AnalysisResult is attached separately
+    // for the UI to render a rich card.
+    const issueLines = result.issues
+      .slice(0, 5)
+      .map(i => `- [${i.severity}] ${i.description}`)
+      .join('\n');
+
+    const content = [
+      `**Essay Analysis Complete** — Score: ${result.overallScore}/100`,
+      '',
+      result.summary,
+      '',
+      result.issues.length > 0 ? `**Top issues:**\n${issueLines}` : 'No major issues found.',
+      '',
+      result.strengths.length > 0
+        ? `**Strengths:** ${result.strengths.join(', ')}`
+        : '',
+    ].filter(l => l !== undefined).join('\n').trim();
+
+    const msg: ChatMessage = {
+      id:             makeId(),
+      role:           'assistant',
+      content,
+      createdAt:      now(),
+      analysisResult: result,
+    };
+
+    setMessages(prev => [...prev, msg]);
+  }
+
+  function injectMessage(content: string, role: 'user' | 'assistant' = 'assistant'): void {
+    const msg: ChatMessage = {
+      id:        makeId(),
+      role,
+      content,
+      createdAt: now(),
+    };
+    setMessages(prev => [...prev, msg]);
+  }
+
+  return { messages, loading, sendMessage, clearMessages, injectAnalysis, injectMessage };
 }

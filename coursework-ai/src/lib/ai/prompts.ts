@@ -289,6 +289,31 @@ Produce only the passage with transitions added. No preamble.`;
  * @param context - The writing context (userInput contains the source passage)
  * @returns User-turn prompt string
  */
+/**
+ * Builds the prompt for fixing a specific issue identified by the analysis engine.
+ * The issue description and suggestion are passed via userInput.
+ * The affected text is in selectedText (set programmatically by the analysis engine).
+ *
+ * @param context - The writing context (selectedText and userInput required)
+ * @returns User-turn prompt string
+ */
+export function buildFixIssuePrompt(context: WritingContext): string {
+  const ctx  = formatContextForPrompt(context);
+  const text = extractSelectedSection(context);
+  const issue = context.userInput ?? '';
+  return `${ctx}
+
+The following passage has been flagged by an essay analysis with this issue:
+${issue}
+
+Passage to fix:
+${text}
+
+Rewrite the passage to address the issue. Preserve the core argument and meaning. Match the specified tone and course level.
+
+Produce only the rewritten passage. No preamble.`;
+}
+
 export function buildSummarizeSourcePrompt(context: WritingContext): string {
   const ctx = formatContextForPrompt(context);
   // userInput is the source passage the user wants summarised.

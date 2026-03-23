@@ -27,7 +27,10 @@ export type WritingTask =
   | 'improve_clarity'
   | 'strengthen_argument'
   | 'generate_transitions'
-  | 'summarize_source';
+  | 'summarize_source'
+  // Analysis-triggered tasks — called by the analysis engine with a specific
+  // paragraphIndex and selectedText targeting the identified issue.
+  | 'fix_issue';
 
 // ─── Metadata enums ───────────────────────────────────────────────────────────
 
@@ -157,4 +160,66 @@ export interface TaskConfig {
   temperature: number;
   maxTokens: number;
   label: string;
+}
+
+// ─── Analysis engine types ────────────────────────────────────────────────────
+// These types are the shared contract between the writing engine and the
+// analysis engine. The analysis engine produces AnalysisResult objects;
+// the writing engine and chat interface consume them.
+
+/**
+ * Severity level of an identified essay issue.
+ */
+export type AnalysisSeverity = 'critical' | 'major' | 'minor' | 'suggestion';
+
+/**
+ * A single issue identified in the essay by the analysis engine.
+ *
+ * @property id             - Unique identifier for this issue
+ * @property severity       - How important this issue is to fix
+ * @property category       - Which aspect of writing this affects
+ * @property paragraphIndex - Zero-based index of the affected paragraph (if applicable)
+ * @property quote          - The exact text excerpt that has the issue
+ * @property description    - Human-readable explanation of the problem
+ * @property suggestion     - Concrete fix or improvement
+ */
+export interface EssayIssue {
+  id: string;
+  severity: AnalysisSeverity;
+  category:
+    | 'thesis'
+    | 'structure'
+    | 'argument'
+    | 'evidence'
+    | 'clarity'
+    | 'transitions'
+    | 'conclusion'
+    | 'grammar';
+  paragraphIndex?: number;
+  quote?: string;
+  description: string;
+  suggestion: string;
+}
+
+/**
+ * The full result produced by the analysis engine for a given essay.
+ * Imported by the chat interface to inject analysis findings into the
+ * conversation, and by the writing engine to target specific improvements.
+ *
+ * @property documentTitle   - Title of the analysed essay
+ * @property overallScore    - 0–100 quality score
+ * @property summary         - One-paragraph plain-English summary of findings
+ * @property issues          - Ordered list of identified issues (most severe first)
+ * @property strengths       - What the essay does well
+ * @property wordCount       - Word count of the analysed text
+ * @property analysedAt      - ISO timestamp of when the analysis ran
+ */
+export interface AnalysisResult {
+  documentTitle?: string;
+  overallScore: number;
+  summary: string;
+  issues: EssayIssue[];
+  strengths: string[];
+  wordCount: number;
+  analysedAt: string;
 }

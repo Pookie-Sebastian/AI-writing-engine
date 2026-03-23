@@ -34,6 +34,7 @@ export const WritingTaskSchema = z.enum([
   'strengthen_argument',
   'generate_transitions',
   'summarize_source',
+  'fix_issue',
 ] as const satisfies readonly WritingTask[]);
 
 /**

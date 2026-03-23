@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { ChatMessage } from '@/lib/chat/types';
+import type { AnalysisResult, EssayIssue } from '@/lib/ai/types';
 
 interface ChatWindowProps {
   messages: ChatMessage[];
@@ -19,11 +20,13 @@ export default function ChatWindow({ messages, onSend }: ChatWindowProps) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 py-12 text-center overflow-y-auto">
         <img src="/logo.svg" alt="coursework.ai" className="h-12 w-auto" />
-        <p className="text-slate-500 text-sm max-w-sm leading-relaxed">
-          Your academic writing assistant. Ask me to help plan, write, or improve any essay.
-          I understand essay structure and will guide you through every section.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-lg mt-2">
+        <div>
+          <p className="text-slate-800 font-semibold text-lg">What are you writing today?</p>
+          <p className="text-slate-500 text-sm mt-1 max-w-sm leading-relaxed">
+            Tell me your topic, paste your assignment brief, or share a draft — I'll write, plan, or improve it.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-lg">
           {SUGGESTIONS.map((s) => (
             <SuggestionChip key={s.label} {...s} onSend={onSend} />
           ))}
@@ -59,9 +62,84 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         {message.streaming && message.content === '' ? (
           <TypingIndicator />
         ) : (
-          <FormattedContent content={message.content} isUser={isUser} />
+          <>
+            <FormattedContent content={message.content} isUser={isUser} />
+            {message.analysisResult && (
+              <AnalysisCard result={message.analysisResult} />
+            )}
+          </>
         )}
-        {/* Streaming cursor removed — responses are now delivered in full */}
+      </div>
+    </div>
+  );
+}
+
+// ─── Analysis card ────────────────────────────────────────────────────────────
+
+const SEVERITY_STYLES: Record<string, string> = {
+  critical:   'bg-red-100 text-red-700 border-red-200',
+  major:      'bg-orange-100 text-orange-700 border-orange-200',
+  minor:      'bg-yellow-100 text-yellow-700 border-yellow-200',
+  suggestion: 'bg-blue-100 text-blue-700 border-blue-200',
+};
+
+function AnalysisCard({ result }: { result: AnalysisResult }) {
+  const scoreColor =
+    result.overallScore >= 75 ? 'text-green-600' :
+    result.overallScore >= 50 ? 'text-yellow-600' :
+    'text-red-600';
+
+  return (
+    <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 overflow-hidden text-slate-800">
+      {/* Score header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white">
+        <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Essay Analysis</span>
+        <span className={`text-2xl font-bold tabular-nums ${scoreColor}`}>
+          {result.overallScore}<span className="text-sm font-normal text-slate-400">/100</span>
+        </span>
+      </div>
+
+      <div className="p-4 space-y-3">
+        {/* Strengths */}
+        {result.strengths.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-slate-500 mb-1.5">Strengths</p>
+            <ul className="space-y-1">
+              {result.strengths.map((s, i) => (
+                <li key={i} className="flex gap-2 text-xs text-slate-700">
+                  <span className="text-green-500 shrink-0">✓</span>
+                  <span>{s}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Issues */}
+        {result.issues.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-slate-500 mb-1.5">Issues to fix</p>
+            <ul className="space-y-2">
+              {result.issues.map((issue: EssayIssue) => (
+                <li key={issue.id} className={`rounded-lg border px-3 py-2 text-xs ${SEVERITY_STYLES[issue.severity] ?? 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="font-semibold capitalize">{issue.severity}</span>
+                    <span className="opacity-60">·</span>
+                    <span className="capitalize">{issue.category}</span>
+                  </div>
+                  <p>{issue.description}</p>
+                  {issue.suggestion && (
+                    <p className="mt-1 opacity-80">Fix: {issue.suggestion}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <p className="text-xs text-slate-400">
+          {result.wordCount.toLocaleString()} words · Ask me to fix any of these issues
+        </p>
       </div>
     </div>
   );
@@ -157,19 +235,27 @@ function TypingIndicator() {
 const SUGGESTIONS = [
   {
     label: 'Write a full essay',
-    prompt: 'Write a complete essay about the causes and consequences of the French Revolution. Include a hook, background, thesis, three body paragraphs each with a topic sentence, evidence, and analysis, and a conclusion with a restated thesis and final insight.',
+    prompt: 'Write a complete essay on the causes and consequences of the French Revolution. Include a hook, background, thesis, three body paragraphs each with a topic sentence, evidence, and analysis, and a conclusion.',
   },
   {
-    label: 'Build an outline',
-    prompt: 'Help me create a detailed essay outline about the impact of social media on mental health in teenagers.',
+    label: 'Create an outline',
+    prompt: 'Create a detailed essay outline on the impact of social media on mental health in teenagers. Include an introduction, three body paragraph sections with bullet points, and a conclusion.',
   },
   {
-    label: 'Write a thesis statement',
-    prompt: 'Write 3 strong thesis statement options for an argumentative essay about whether university education should be free.',
+    label: 'Write 3 thesis options',
+    prompt: 'Write 3 strong thesis statement options for an argumentative essay on whether university education should be free.',
   },
   {
-    label: 'Feedback on my intro',
-    prompt: 'Here is my introduction — please give feedback on the hook, background, and thesis, then show me an improved version:\n\n[paste your introduction here]',
+    label: 'Improve my writing',
+    prompt: 'Here is a paragraph from my essay — rewrite it to improve clarity, strengthen the argument, and make it more academic:\n\n[paste your paragraph here]',
+  },
+  {
+    label: 'Write an introduction',
+    prompt: 'Write a strong introduction for an essay arguing that climate change is the most urgent issue facing humanity today. Include a hook, background context, and a clear thesis.',
+  },
+  {
+    label: 'Fix my conclusion',
+    prompt: 'Here is my conclusion — rewrite it so it properly restates the thesis, summarises the main arguments, and ends with a strong final insight:\n\n[paste your conclusion here]',
   },
 ];
 

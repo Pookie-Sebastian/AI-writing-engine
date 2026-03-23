@@ -25,6 +25,7 @@ import {
   buildStrengthenArgumentPrompt,
   buildTransitionsPrompt,
   buildSummarizeSourcePrompt,
+  buildFixIssuePrompt,
 } from './prompts';
 import { retryModelCall } from './model';
 import { formatWritingResponse } from './formatter';
@@ -51,6 +52,8 @@ export const TASK_CONFIGS: Record<WritingTask, TaskConfig> = {
   strengthen_argument:    { temperature: 0.5, maxTokens: 1024, label: 'Strengthen Argument'     },
   generate_transitions:   { temperature: 0.5, maxTokens: 1024, label: 'Add Transitions'         },
   summarize_source:       { temperature: 0.3, maxTokens: 512,  label: 'Summarize Source'        },
+  // Analysis-triggered: fix a specific issue identified by the analysis engine
+  fix_issue:              { temperature: 0.4, maxTokens: 1024, label: 'Fix Issue'                },
 };
 
 // ─── Prompt resolver ──────────────────────────────────────────────────────────
@@ -78,6 +81,7 @@ export function resolvePromptTemplate(task: WritingTask, context: WritingContext
     case 'strengthen_argument':     return buildStrengthenArgumentPrompt(context);
     case 'generate_transitions':    return buildTransitionsPrompt(context);
     case 'summarize_source':        return buildSummarizeSourcePrompt(context);
+    case 'fix_issue':               return buildFixIssuePrompt(context);
     default: {
       // Exhaustive check — TypeScript will error if a task is unhandled
       const _exhaustive: never = task;

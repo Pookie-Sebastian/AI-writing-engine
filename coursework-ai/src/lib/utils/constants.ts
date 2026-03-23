@@ -25,6 +25,7 @@ export const TASK_LABELS: Record<WritingTask, string> = {
   strengthen_argument:     'Strengthen Argument',
   generate_transitions:    'Add Transitions',
   summarize_source:        'Summarize Source',
+  fix_issue:               'Fix Issue',
 };
 
 // ─── Task descriptions ────────────────────────────────────────────────────────
@@ -45,6 +46,7 @@ export const TASK_DESCRIPTIONS: Record<WritingTask, string> = {
   strengthen_argument:     'Improve reasoning and evidence in the selected passage.',
   generate_transitions:    'Add smooth transitions between ideas in the selection.',
   summarize_source:        'Summarize a source passage into a citation-ready sentence.',
+  fix_issue:               'Fix a specific issue identified by the analysis engine.',
 };
 
 // ─── Task groupings ───────────────────────────────────────────────────────────
