@@ -22,4 +22,10 @@ export interface ChatMessage {
    * The ChatWindow renders a rich analysis card when this is present.
    */
   analysisResult?: AnalysisResult;
+  /**
+   * True for messages injected by the analysis engine via injectMessage().
+   * These are shown in the UI but excluded from the history sent to the API
+   * to avoid polluting the conversation context with status messages.
+   */
+  injected?: boolean;
 }

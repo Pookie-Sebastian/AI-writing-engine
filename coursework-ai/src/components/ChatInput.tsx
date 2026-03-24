@@ -52,15 +52,20 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
           <textarea
             ref={textareaRef}
             value={value}
-            onChange={(e) => !disabled && setValue(e.target.value)}
+            onChange={(e) => {
+              // readOnly suppresses onChange in most browsers, but guard here
+              // as a safety net for edge cases (IME, autofill, paste events).
+              if (!disabled) setValue(e.target.value);
+            }}
             onKeyDown={handleKeyDown}
-            // Never set disabled — disabled elements suppress keyboard events entirely,
-            // which breaks Enter-to-send. Use readOnly + visual styling instead.
+            onPaste={(e) => { if (disabled) e.preventDefault(); }}
+            // Never use disabled — it suppresses keyboard events entirely,
+            // breaking Enter-to-send. readOnly preserves event handling.
             readOnly={disabled}
             placeholder={disabled ? 'Waiting for response…' : 'Ask me to write, plan, or improve your essay…'}
             rows={1}
             className={`flex-1 resize-none bg-transparent text-sm placeholder:text-slate-400 focus:outline-none leading-relaxed py-1
-              ${disabled ? 'text-slate-400 cursor-default select-none' : 'text-slate-800'}`}
+              ${disabled ? 'text-slate-400 cursor-default' : 'text-slate-800'}`}
           />
           <button
             onClick={submit}

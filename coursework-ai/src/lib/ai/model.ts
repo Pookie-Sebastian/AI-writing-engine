@@ -81,16 +81,16 @@ export async function runModel(
 
   const content = completion.choices[0]?.message?.content;
 
+  if (!content) {
+    throw new ModelError('Model returned an empty response.');
+  }
+
   logger.info('Model call complete', {
     model:        DEFAULT_MODEL,
     promptTokens: completion.usage?.prompt_tokens,
     outputTokens: completion.usage?.completion_tokens,
     totalTokens:  completion.usage?.total_tokens,
   });
-
-  if (!content) {
-    throw new ModelError('Model returned an empty response.');
-  }
 
   return content;
 }

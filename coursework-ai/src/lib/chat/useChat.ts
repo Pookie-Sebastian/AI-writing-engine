@@ -102,10 +102,11 @@ export function useChat(): UseChatReturn {
     setLoading(true);
 
     // History sent to the API: everything up to and including the new user message
-    const history = [...current, userMsg].map(m => ({
-      role:    m.role,
-      content: m.content,
-    }));
+    // Exclude injected messages (status updates from the analysis engine) from
+    // the API history — they are UI-only and would pollute the conversation context.
+    const history = [...current, userMsg]
+      .filter(m => !m.injected)
+      .map(m => ({ role: m.role, content: m.content }));
 
     try {
       const res  = await fetch('/api/chat', {
@@ -143,6 +144,9 @@ export function useChat(): UseChatReturn {
   }
 
   function clearMessages(): void {
+    // Do not clear while a request is in flight — the in-flight setMessages
+    // call would re-add the placeholder to the freshly cleared array.
+    if (loading) return;
     setMessages([]);
   }
 
@@ -174,6 +178,8 @@ export function useChat(): UseChatReturn {
       content,
       createdAt:      now(),
       analysisResult: result,
+      // Not marked injected — the analysis summary IS part of the conversation
+      // context and should be sent to the API so the AI can answer follow-ups.
     };
 
     setMessages(prev => [...prev, msg]);
@@ -185,6 +191,7 @@ export function useChat(): UseChatReturn {
       role,
       content,
       createdAt: now(),
+      injected:  true, // excluded from API history
     };
     setMessages(prev => [...prev, msg]);
   }
