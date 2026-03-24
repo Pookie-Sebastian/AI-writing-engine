@@ -75,7 +75,6 @@ class ConsoleLogSink implements LogSink {
           ? ' ' + JSON.stringify(rest)
           : '';
         const prefix = `[${timestamp}] ${level.toUpperCase().padEnd(5)}`;
-        // eslint-disable-next-line no-console
         console.log(`${prefix} ${message}${meta}`);
       }
     } catch {

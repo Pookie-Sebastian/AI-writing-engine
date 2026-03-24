@@ -36,7 +36,7 @@ export default clerkEnabled
         await auth.protect();
       }
     })
-  : (_req: NextRequest) => NextResponse.next();
+  : (_req: NextRequest) => NextResponse.next(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 export const config = {
   matcher: [

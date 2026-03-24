@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 import type { ChatMessage } from '@/lib/chat/types';
 import type { AnalysisResult, EssayIssue } from '@/lib/ai/types';
 
@@ -20,11 +21,11 @@ export default function ChatWindow({ messages, onSend, loading = false }: ChatWi
   if (messages.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 py-12 text-center overflow-y-auto">
-        <img src="/logo.svg" alt="coursework.ai" className="h-12 w-auto" />
+        <Image src="/logo.svg" alt="coursework.ai" width={180} height={48} className="h-12 w-auto" />
         <div>
           <p className="text-slate-800 font-semibold text-lg">What are you writing today?</p>
           <p className="text-slate-500 text-sm mt-1 max-w-sm leading-relaxed">
-            Tell me your topic, paste your assignment brief, or share a draft — I'll write, plan, or improve it.
+            Tell me your topic, paste your assignment brief, or share a draft — I&apos;ll write, plan, or improve it.
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-lg">
@@ -161,67 +162,100 @@ function FormattedContent({ content, isUser }: { content: string; isUser: boolea
   function inline(text: string): string {
     return text
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      // Use [^*\n]+ to prevent bold/italic matching across line boundaries
       .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
       .replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
       .replace(/`([^`\n]+)`/g, `<code class="${codeClass}">$1</code>`);
   }
 
-  const blocks = content.split(/\n{2,}/);
+  // Render line-by-line so mixed blocks (heading + bullets with no blank line)
+  // are handled correctly. Consecutive bullet/numbered lines are grouped into
+  // a single list element to avoid wrapping each line in its own <ul>.
+  const lines = content.split('\n');
+  const elements: React.ReactNode[] = [];
+  const bulletBuffer: string[]   = [];
+  const numberedBuffer: string[] = [];
+  let keyCounter = 0;
 
-  return (
-    <div className="space-y-2">
-      {blocks.map((block, i) => {
-        const trimmed = block.trim();
-        if (!trimmed) return null;
+  function flushBullets() {
+    if (bulletBuffer.length === 0) return;
+    const buf = bulletBuffer.splice(0);
+    elements.push(
+      <ul key={keyCounter++} className="space-y-1">
+        {buf.map((line, j) => (
+          <li key={j} className="flex gap-2">
+            <span className={`mt-0.5 shrink-0 ${isUser ? 'text-indigo-200' : 'text-indigo-400'}`}>›</span>
+            <span dangerouslySetInnerHTML={{ __html: inline(line.replace(/^[-•*]\s*/, '')) }} />
+          </li>
+        ))}
+      </ul>
+    );
+  }
 
-        // Headings: ###, ##, #
-        const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
-        if (headingMatch) {
-          const level = headingMatch[1].length;
-          const cls = level === 1
-            ? 'font-bold text-base mt-1'
-            : 'font-semibold text-sm mt-1';
-          return <p key={i} className={cls} dangerouslySetInnerHTML={{ __html: inline(headingMatch[2]) }} />;
-        }
+  function flushNumbered() {
+    if (numberedBuffer.length === 0) return;
+    const buf = numberedBuffer.splice(0);
+    elements.push(
+      <ol key={keyCounter++} className="space-y-1 list-none">
+        {buf.map((line, j) => (
+          <li key={j} className="flex gap-2">
+            <span className={`shrink-0 font-medium tabular-nums ${isUser ? 'text-indigo-200' : 'text-indigo-500'}`}>{j + 1}.</span>
+            <span dangerouslySetInnerHTML={{ __html: inline(line.replace(/^\d+\.\s*/, '')) }} />
+          </li>
+        ))}
+      </ol>
+    );
+  }
 
-        const lines = trimmed.split('\n');
+  for (const raw of lines) {
+    const line = raw.trimEnd();
 
-        // Bullet list
-        if (lines.every(l => /^[-•*]\s/.test(l.trim()))) {
-          return (
-            <ul key={i} className="space-y-1">
-              {lines.map((line, j) => (
-                <li key={j} className="flex gap-2">
-                  <span className={`mt-0.5 shrink-0 ${isUser ? 'text-indigo-200' : 'text-indigo-400'}`}>›</span>
-                  <span dangerouslySetInnerHTML={{ __html: inline(line.replace(/^[-•*]\s*/, '')) }} />
-                </li>
-              ))}
-            </ul>
-          );
-        }
+    // Blank line — flush any open list
+    if (!line.trim()) {
+      flushBullets();
+      flushNumbered();
+      continue;
+    }
 
-        // Numbered list
-        if (lines.every(l => /^\d+\.\s/.test(l.trim()))) {
-          return (
-            <ol key={i} className="space-y-1 list-none">
-              {lines.map((line, j) => (
-                <li key={j} className="flex gap-2">
-                  <span className={`shrink-0 font-medium tabular-nums ${isUser ? 'text-indigo-200' : 'text-indigo-500'}`}>{j + 1}.</span>
-                  <span dangerouslySetInnerHTML={{ __html: inline(line.replace(/^\d+\.\s*/, '')) }} />
-                </li>
-              ))}
-            </ol>
-          );
-        }
+    // Heading
+    const headingMatch = line.match(/^(#{1,3})\s+(.+)/);
+    if (headingMatch) {
+      flushBullets();
+      flushNumbered();
+      const level = headingMatch[1].length;
+      const cls = level === 1 ? 'font-bold text-base mt-2' : 'font-semibold text-sm mt-2';
+      elements.push(
+        <p key={keyCounter++} className={cls} dangerouslySetInnerHTML={{ __html: inline(headingMatch[2]) }} />
+      );
+      continue;
+    }
 
-        // Normal paragraph — single newlines become <br>
-        return (
-          <p key={i} dangerouslySetInnerHTML={{ __html: lines.map(l => inline(l)).join('<br/>') }} />
-        );
-      })}
-    </div>
-  );
+    // Bullet line
+    if (/^[-•*]\s/.test(line.trim())) {
+      flushNumbered();
+      bulletBuffer.push(line.trim());
+      continue;
+    }
+
+    // Numbered line
+    if (/^\d+\.\s/.test(line.trim())) {
+      flushBullets();
+      numberedBuffer.push(line.trim());
+      continue;
+    }
+
+    // Plain text — flush lists, emit paragraph
+    flushBullets();
+    flushNumbered();
+    elements.push(
+      <p key={keyCounter++} dangerouslySetInnerHTML={{ __html: inline(line) }} />
+    );
+  }
+
+  // Flush any trailing list
+  flushBullets();
+  flushNumbered();
+
+  return <div className="space-y-1">{elements}</div>;
 }
 
 // ─── Typing indicator ─────────────────────────────────────────────────────────

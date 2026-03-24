@@ -8,11 +8,31 @@
  * @module app/page
  */
 
+import Image from 'next/image';
 import { useChat } from '@/lib/chat/useChat';
 import ChatWindow from '@/components/ChatWindow';
 import ChatInput from '@/components/ChatInput';
 
 const clerkEnabled = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+// Dynamically require Clerk's UserButton only when Clerk is configured.
+// Loaded at module level (not inside a component) so JSX is never constructed
+// inside a try/catch, satisfying the react-hooks/error-boundaries lint rule.
+let _UserButton: React.ComponentType<{ afterSignOutUrl: string }> | null = null;
+if (clerkEnabled) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    _UserButton = require('@clerk/nextjs').UserButton;
+  } catch {
+    _UserButton = null;
+  }
+}
+
+function ClerkUserButton() {
+  if (!_UserButton) return null;
+  const UB = _UserButton;
+  return <UB afterSignOutUrl="/sign-in" />;
+}
 
 export default function EssayChatPage() {
   const { messages, loading, sendMessage, clearMessages } = useChat();
@@ -22,7 +42,7 @@ export default function EssayChatPage() {
 
       {/* Header */}
       <header className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shrink-0">
-        <img src="/logo.svg" alt="coursework.ai" className="h-8 w-auto" />
+        <Image src="/logo.svg" alt="coursework.ai" width={120} height={32} className="h-8 w-auto" />
         <div className="flex items-center gap-3">
           {messages.length > 0 && (
             <button
@@ -53,14 +73,4 @@ export default function EssayChatPage() {
 
     </div>
   );
-}
-
-function ClerkUserButton() {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { UserButton } = require('@clerk/nextjs');
-    return <UserButton afterSignOutUrl="/sign-in" />;
-  } catch {
-    return null;
-  }
 }

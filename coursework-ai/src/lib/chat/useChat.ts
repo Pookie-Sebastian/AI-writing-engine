@@ -19,7 +19,7 @@
  * @module lib/chat/useChat
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import type { ChatMessage } from './types';
 import type { AnalysisResult } from '@/lib/ai/types';
 
@@ -70,14 +70,17 @@ export function useChat(): UseChatReturn {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading]   = useState(false);
 
-  // A ref that always holds the latest messages array.
-  // sendMessage reads from this instead of closing over the state variable,
-  // which would capture a stale snapshot on every render.
+  // Refs that always hold the latest values — used inside callbacks to avoid
+  // stale closure bugs without adding them to useCallback dependency arrays.
   const messagesRef = useRef<ChatMessage[]>([]);
+  const loadingRef  = useRef(false);
   messagesRef.current = messages;
 
-  async function sendMessage(text: string): Promise<void> {
-    if (loading) return;
+  const sendMessage = useCallback(async (text: string): Promise<void> => {
+    // Use ref for the guard so concurrent calls in the same tick are blocked
+    // even before the state update from setLoading(true) has propagated.
+    if (loadingRef.current) return;
+    loadingRef.current = true;
 
     const userMsg: ChatMessage = {
       id:        makeId(),
@@ -100,6 +103,7 @@ export function useChat(): UseChatReturn {
     const current = messagesRef.current;
     setMessages([...current, userMsg, placeholder]);
     setLoading(true);
+    loadingRef.current = true;
 
     // History sent to the API: everything up to and including the new user message
     // Exclude injected messages (status updates from the analysis engine) from
@@ -139,18 +143,18 @@ export function useChat(): UseChatReturn {
         )
       );
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
-  }
+  }, []); // no deps — reads everything via refs
 
-  function clearMessages(): void {
-    // Do not clear while a request is in flight — the in-flight setMessages
-    // call would re-add the placeholder to the freshly cleared array.
-    if (loading) return;
+  const clearMessages = useCallback((): void => {
+    // Use ref so this works correctly even if called before loading state settles.
+    if (loadingRef.current) return;
     setMessages([]);
-  }
+  }, []);
 
-  function injectAnalysis(result: AnalysisResult): void {
+  const injectAnalysis = useCallback((result: AnalysisResult): void => {
     // Build a plain-text summary for the chat history so the AI can reference
     // it in follow-up responses. The full AnalysisResult is attached separately
     // for the UI to render a rich card.
@@ -183,9 +187,9 @@ export function useChat(): UseChatReturn {
     };
 
     setMessages(prev => [...prev, msg]);
-  }
+  }, []);
 
-  function injectMessage(content: string, role: 'user' | 'assistant' = 'assistant'): void {
+  const injectMessage = useCallback((content: string, role: 'user' | 'assistant' = 'assistant'): void => {
     const msg: ChatMessage = {
       id:        makeId(),
       role,
@@ -194,7 +198,7 @@ export function useChat(): UseChatReturn {
       injected:  true, // excluded from API history
     };
     setMessages(prev => [...prev, msg]);
-  }
+  }, []);
 
   return { messages, loading, sendMessage, clearMessages, injectAnalysis, injectMessage };
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, KeyboardEvent } from 'react';
+import { useState, useRef, useEffect, KeyboardEvent, ClipboardEvent } from 'react';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -43,6 +43,10 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
     }
   }
 
+  function handlePaste(e: ClipboardEvent<HTMLTextAreaElement>) {
+    if (disabled) e.preventDefault();
+  }
+
   const hasText = value.trim().length > 0;
   const canSend = hasText && !disabled;
 
@@ -66,6 +70,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
               if (!disabled) setValue(e.target.value);
             }}
             onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder={disabled ? 'Waiting for response…' : 'Ask me to write, plan, or improve your essay…'}
             rows={1}
             className={`flex-1 resize-none bg-transparent text-sm placeholder:text-slate-400 focus:outline-none leading-relaxed py-1
