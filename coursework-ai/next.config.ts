@@ -60,8 +60,8 @@ const nextConfig: NextConfig = {
   // Without this, Next.js blocks cross-origin HMR connections and the browser
   // runs a permanently stale JS bundle — code changes never reach the client.
   allowedDevOrigins: [
-    '3000--019d1b68-fdb2-79b7-9cba-81feff736d64.us-east-1-01.gitpod.dev',
     '*.gitpod.dev',
+    '*.us-east-1-01.gitpod.dev',
   ],
   async headers() {
     return [
